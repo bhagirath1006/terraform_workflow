@@ -14,7 +14,6 @@ container_port         = 8080
 host_port              = 80
 
 # Secrets (use AWS Secrets Manager in production)
-app_secret_value = "dev-secret-change-me"
 db_username      = "devadmin"
 db_password      = "dev-password-change-me"
 api_key          = "dev-api-key-change-me"

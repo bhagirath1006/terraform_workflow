@@ -91,12 +91,13 @@ resource "aws_instance" "app" {
   associate_public_ip_address = true
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    docker_username = var.docker_username
-    docker_password = var.docker_password
-    docker_image    = var.docker_image
-    container_name  = var.container_name
-    container_port  = var.container_port
-    project_name    = var.project_name
+    docker_registry_server = var.docker_registry_server
+    docker_username        = var.docker_username
+    docker_password        = var.docker_password
+    docker_image_uri       = var.docker_image_uri
+    container_port         = var.container_port
+    host_port              = var.host_port
+    project_name           = var.project_name
   }))
 
   tags = {
@@ -137,6 +138,8 @@ resource "aws_cloudwatch_log_group" "app" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
+  count = var.enable_monitoring ? 1 : 0
+
   alarm_name          = "${var.project_name}-cpu-high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "2"
@@ -158,6 +161,8 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "status_check" {
+  count = var.enable_monitoring ? 1 : 0
+
   alarm_name          = "${var.project_name}-status-check"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "2"

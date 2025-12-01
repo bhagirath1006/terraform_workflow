@@ -90,13 +90,6 @@ variable "host_port" {
 }
 
 # Secrets Variables
-variable "app_secret_value" {
-  description = "Application secret value"
-  type        = string
-  sensitive   = true
-  default     = "change-me-in-production"
-}
-
 variable "db_username" {
   description = "Database username"
   type        = string

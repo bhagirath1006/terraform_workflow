@@ -14,7 +14,6 @@ container_port         = 8080
 host_port              = 80
 
 # Secrets (use AWS Secrets Manager in production)
-app_secret_value = "staging-secret-change-me"
 db_username      = "stagingadmin"
 db_password      = "staging-password-change-me"
 api_key          = "staging-api-key-change-me"

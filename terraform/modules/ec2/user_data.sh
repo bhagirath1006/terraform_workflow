@@ -17,17 +17,17 @@ systemctl enable docker
 
 # Login to Docker registry if credentials provided
 if [ -n "${docker_username}" ] && [ -n "${docker_password}" ]; then
-  echo "${docker_password}" | docker login -u "${docker_username}" --password-stdin
+  echo "${docker_password}" | docker login -u "${docker_username}" --password-stdin ${docker_registry_server}
 fi
 
 # Pull and run container
-docker pull ${docker_image}
+docker pull ${docker_image_uri}
 docker run -d \
-  --name ${container_name} \
+  --name ${project_name} \
   --restart unless-stopped \
-  -p ${container_port}:${container_port} \
-  ${docker_image}
+  -p ${host_port}:${container_port} \
+  ${docker_image_uri}
 
 # Log deployment
-echo "Container deployment complete: ${docker_image}" >> /var/log/deployment.log
+echo "Container deployment complete: ${docker_image_uri}" >> /var/log/deployment.log
 date >> /var/log/deployment.log

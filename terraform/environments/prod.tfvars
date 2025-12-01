@@ -14,7 +14,6 @@ container_port         = 8080
 host_port              = 80
 
 # Secrets (use AWS Secrets Manager in production)
-app_secret_value = "prod-secret-change-me"
 db_username      = "prodadmin"
 db_password      = "prod-password-change-me"
 api_key          = "prod-api-key-change-me"

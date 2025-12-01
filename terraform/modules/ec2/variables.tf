@@ -36,22 +36,36 @@ variable "docker_password" {
   sensitive   = true
 }
 
-variable "docker_image" {
+variable "docker_registry_server" {
+  description = "Docker registry server"
+  type        = string
+  default     = "docker.io"
+  sensitive   = true
+}
+
+variable "docker_image_uri" {
   description = "Docker image URI"
   type        = string
   default     = "nginx:latest"
-}
-
-variable "container_name" {
-  description = "Container name"
-  type        = string
-  default     = "app"
+  sensitive   = true
 }
 
 variable "container_port" {
   description = "Container port"
   type        = number
   default     = 80
+}
+
+variable "host_port" {
+  description = "Host port to map to container"
+  type        = number
+  default     = 80
+}
+
+variable "enable_monitoring" {
+  description = "Enable CloudWatch monitoring and alarms"
+  type        = bool
+  default     = true
 }
 
 variable "log_retention_days" {

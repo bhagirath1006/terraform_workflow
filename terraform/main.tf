@@ -14,12 +14,13 @@ module "vpc" {
 module "secrets" {
   source = "./modules/secrets"
 
-  project_name       = var.project_name
-  environment        = var.environment
-  app_secret_value   = var.app_secret_value
-  db_username        = var.db_username
-  db_password        = var.db_password
-  api_key            = var.api_key
+  project_name    = var.project_name
+  environment     = var.environment
+  docker_username = var.docker_username
+  docker_password = var.docker_password
+  db_username     = var.db_username
+  db_password     = var.db_password
+  api_key         = var.api_key
 }
 
 # EC2 Module
