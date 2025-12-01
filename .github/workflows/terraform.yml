@@ -47,10 +47,17 @@ jobs:
       - name: Terraform Plan
         working-directory: terraform
         run: |
+          VAULT_ADDR="${{ secrets.VAULT_ADDR }}"
+          VAULT_TOKEN="${{ secrets.VAULT_TOKEN }}"
+          
+          # Use default values if secrets not set
+          VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
+          VAULT_TOKEN=${VAULT_TOKEN:-"dev-token"}
+          
           terraform plan -out=tfplan \
             -var-file="environments/dev.tfvars" \
-            -var="vault_addr=${{ secrets.VAULT_ADDR }}" \
-            -var="vault_token=${{ secrets.VAULT_TOKEN }}"
+            -var="vault_addr=$VAULT_ADDR" \
+            -var="vault_token=$VAULT_TOKEN"
 
       # Terraform Apply
       - name: Terraform Apply
