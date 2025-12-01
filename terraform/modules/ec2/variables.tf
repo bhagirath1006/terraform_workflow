@@ -20,8 +20,14 @@ variable "subnet_id" {
 }
 
 variable "security_group_id" {
-  description = "Security group ID"
+  description = "Application security group ID"
   type        = string
+}
+
+variable "ssh_security_group_id" {
+  description = "SSH security group ID"
+  type        = string
+  default     = ""
 }
 
 variable "docker_username" {

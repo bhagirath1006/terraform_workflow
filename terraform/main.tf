@@ -36,6 +36,7 @@ module "ec2" {
   instance_type          = var.instance_type
   subnet_id              = module.vpc.public_subnet_ids[0]
   security_group_id      = module.vpc.security_group_id
+  ssh_security_group_id  = module.vpc.ssh_security_group_id
   docker_registry_server = var.docker_registry_server
   docker_username        = var.docker_username
   docker_password        = var.docker_password

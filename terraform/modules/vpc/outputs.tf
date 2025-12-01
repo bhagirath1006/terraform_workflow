@@ -11,7 +11,13 @@ output "private_subnet_ids" {
 }
 
 output "security_group_id" {
-  value = aws_security_group.app.id
+  description = "Application security group ID"
+  value       = aws_security_group.app.id
+}
+
+output "ssh_security_group_id" {
+  description = "SSH security group ID"
+  value       = aws_security_group.ssh.id
 }
 
 output "igw_id" {
