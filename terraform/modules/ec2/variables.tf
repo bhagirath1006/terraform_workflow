@@ -41,3 +41,10 @@ variable "log_retention_days" {
   type        = number
   default     = 7
 }
+
+variable "ssh_public_key" {
+  description = "SSH public key for EC2 access (generated with ssh-keygen)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}

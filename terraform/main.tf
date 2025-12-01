@@ -33,4 +33,5 @@ module "ec2" {
   ssh_security_group_id = module.vpc.ssh_security_group_id
   enable_monitoring     = var.enable_monitoring
   log_retention_days    = var.log_retention_days
+  ssh_public_key        = var.ssh_public_key
 }

@@ -134,12 +134,26 @@ resource "aws_instance" "app" {
     project_name = var.project_name
   }))
 
+  key_name = var.ssh_public_key != "" ? aws_key_pair.deployer[0].key_name : null
+
   tags = {
     Name        = "${var.project_name}-instance"
     Environment = var.environment
   }
 
   depends_on = [aws_iam_instance_profile.ec2_profile]
+}
+
+# Create key pair from public key if provided
+resource "aws_key_pair" "deployer" {
+  count           = var.ssh_public_key != "" ? 1 : 0
+  key_name        = "${var.project_name}-deployer"
+  public_key      = var.ssh_public_key
+
+  tags = {
+    Name        = "${var.project_name}-deployer-key"
+    Environment = var.environment
+  }
 }
 
 resource "aws_eip" "app" {

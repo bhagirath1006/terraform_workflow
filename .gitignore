@@ -1,3 +1,8 @@
+# SSH Keys (generated locally, never commit)
+ssh-keys/
+*.pem
+!*.pub
+
 # Terraform files
 *.tfstate
 *.tfstate.*
