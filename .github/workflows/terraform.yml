@@ -76,8 +76,8 @@ jobs:
         id: deploy
         working-directory: terraform
         run: |
-          INSTANCE_ID=$(terraform output -raw instance_id 2>/dev/null || echo "pending")
-          EIP=$(terraform output -raw elastic_ip 2>/dev/null || echo "pending")
+          INSTANCE_ID=$(terraform output instance_id 2>/dev/null | tr -d '"' || echo "pending")
+          EIP=$(terraform output elastic_ip 2>/dev/null | tr -d '"' || echo "pending")
           echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
           echo "elastic_ip=$EIP" >> $GITHUB_OUTPUT
 
