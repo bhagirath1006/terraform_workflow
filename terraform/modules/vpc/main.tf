@@ -89,7 +89,8 @@ resource "aws_default_security_group" "default" {
   }
 }
 
-# SSH Security Group
+# SSH Security Group - Attached to EC2 instance in ec2 module
+# checkov:skip=CKV2_AWS_5:Security group is attached to EC2 in separate module
 resource "aws_security_group" "ssh" {
   name        = "${var.project_name}-ssh-sg"
   description = "Security group for SSH access"
@@ -140,7 +141,8 @@ resource "aws_vpc_security_group_egress_rule" "ssh_dns" {
   }
 }
 
-# Application Security Group
+# Application Security Group - Attached to EC2 instance in ec2 module
+# checkov:skip=CKV2_AWS_5:Security group is attached to EC2 in separate module
 resource "aws_security_group" "app" {
   name        = "${var.project_name}-app-sg"
   description = "Security group for application HTTP/HTTPS traffic"

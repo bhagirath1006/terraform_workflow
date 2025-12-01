@@ -50,6 +50,7 @@ resource "aws_iam_role_policy" "ec2_policy" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "AllowSecretsManagerRead"
         Effect = "Allow"
         Action = [
           "secretsmanager:GetSecretValue",
@@ -58,6 +59,7 @@ resource "aws_iam_role_policy" "ec2_policy" {
         Resource = "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:*"
       },
       {
+        Sid    = "AllowECRToken"
         Effect = "Allow"
         Action = [
           "ecr:GetAuthorizationToken"
@@ -65,6 +67,7 @@ resource "aws_iam_role_policy" "ec2_policy" {
         Resource = "*"
       },
       {
+        Sid    = "AllowECRImages"
         Effect = "Allow"
         Action = [
           "ecr:BatchGetImage",
@@ -73,6 +76,7 @@ resource "aws_iam_role_policy" "ec2_policy" {
         Resource = "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/*"
       },
       {
+        Sid    = "AllowCloudWatchMetrics"
         Effect = "Allow"
         Action = [
           "cloudwatch:PutMetricData"
@@ -85,6 +89,7 @@ resource "aws_iam_role_policy" "ec2_policy" {
         }
       },
       {
+        Sid    = "AllowCloudWatchLogs"
         Effect = "Allow"
         Action = [
           "logs:CreateLogStream",
