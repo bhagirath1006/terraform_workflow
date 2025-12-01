@@ -1,15 +1,31 @@
-output "app_secrets_arn" {
-  value = aws_secretsmanager_secret.app_secrets.arn
+output "app_secrets_path" {
+  description = "Path to application secrets in Vault"
+  value       = vault_generic_secret.app_secrets.path
 }
 
-output "app_secrets_name" {
-  value = aws_secretsmanager_secret.app_secrets.name
+output "database_secrets_path" {
+  description = "Path to database secrets in Vault"
+  value       = try(vault_generic_secret.database_credentials[0].path, null)
 }
 
-output "db_secrets_arn" {
-  value = try(aws_secretsmanager_secret.database_credentials[0].arn, null)
+output "ec2_role_id" {
+  description = "AppRole ID for EC2 instances"
+  value       = vault_approle_auth_backend_role.ec2_role.role_id
+  sensitive   = true
 }
 
-output "db_secrets_name" {
-  value = try(aws_secretsmanager_secret.database_credentials[0].name, null)
+output "ec2_secret_id" {
+  description = "AppRole Secret ID for EC2 instances"
+  value       = vault_approle_auth_backend_role_secret_id.ec2_secret.secret_id
+  sensitive   = true
+}
+
+output "vault_addr" {
+  description = "Vault server address"
+  value       = var.vault_addr
+}
+
+output "ec2_policy_name" {
+  description = "Vault policy name for EC2 instances"
+  value       = vault_policy.ec2_policy.name
 }

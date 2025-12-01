@@ -39,10 +39,9 @@ variable "private_subnet_cidrs" {
 }
 
 variable "ssh_allowed_cidr" {
-  description = "CIDR block allowed for SSH access"
-  type        = string
-  default     = "0.0.0.0/0"
-  sensitive   = true
+  description = "CIDR blocks allowed for SSH access"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
 }
 
 # EC2 Variables
@@ -121,4 +120,29 @@ variable "log_retention_days" {
   description = "CloudWatch log retention in days"
   type        = number
   default     = 7
+}
+
+# Vault Configuration
+variable "vault_addr" {
+  description = "Vault server address (e.g., https://vault.example.com:8200)"
+  type        = string
+  sensitive   = true
+}
+
+variable "vault_token" {
+  description = "Vault authentication token"
+  type        = string
+  sensitive   = true
+}
+
+variable "vault_skip_tls_verify" {
+  description = "Skip TLS verification for Vault (not recommended for production)"
+  type        = bool
+  default     = false
+}
+
+variable "db_host" {
+  description = "Database host address"
+  type        = string
+  default     = "localhost"
 }

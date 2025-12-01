@@ -40,8 +40,8 @@ resource "aws_iam_role" "ec2_role" {
 }
 
 resource "aws_iam_role_policy" "ec2_policy" {
-  name   = "${var.project_name}-ec2-policy"
-  role   = aws_iam_role.ec2_role.id
+  name = "${var.project_name}-ec2-policy"
+  role = aws_iam_role.ec2_role.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -119,12 +119,13 @@ resource "aws_eip" "app" {
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [aws_instance.app]
 }
 
-resource "aws_network_interface_attachment" "eip_attachment" {
-  network_interface_id    = aws_instance.app.primary_network_interface_id
-  allocation_id           = aws_eip.app.id
-  wait_for_attachment    = true
+resource "aws_eip_association" "eip_assoc" {
+  instance_id   = aws_instance.app.id
+  allocation_id = aws_eip.app.id
 }
 
 resource "aws_cloudwatch_log_group" "app" {

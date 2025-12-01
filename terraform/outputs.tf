@@ -25,12 +25,12 @@ output "instance_id" {
 
 output "instance_private_ip" {
   description = "EC2 instance private IP"
-  value       = module.ec2.instance_private_ip
+  value       = module.ec2.private_ip
 }
 
 output "instance_public_ip" {
   description = "EC2 instance Elastic IP"
-  value       = module.ec2.instance_public_ip
+  value       = module.ec2.public_ip
 }
 
 output "website_url" {
@@ -44,19 +44,19 @@ output "log_group_name" {
 }
 
 output "app_secret_arn" {
-  description = "Application secret ARN"
-  value       = module.secrets.app_secret_arn
+  description = "Path to application secrets in Vault"
+  value       = module.secrets.app_secrets_path
   sensitive   = true
 }
 
 output "database_secret_arn" {
-  description = "Database secret ARN"
-  value       = module.secrets.database_secret_arn
+  description = "Path to database secrets in Vault"
+  value       = module.secrets.database_secrets_path
   sensitive   = true
 }
 
 output "api_secret_arn" {
-  description = "API key secret ARN"
-  value       = module.secrets.api_secret_arn
+  description = "Vault policy name for EC2 instances"
+  value       = module.secrets.ec2_policy_name
   sensitive   = true
 }
