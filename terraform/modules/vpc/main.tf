@@ -20,6 +20,10 @@ resource "aws_vpc" "main" {
     Name        = "${var.project_name}-vpc"
     Environment = var.environment
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_subnet" "public" {
@@ -287,7 +291,7 @@ data "aws_iam_policy_document" "kms_vpc_logs" {
 
     principals {
       type        = "Service"
-      identifiers = ["vpc-flow-logs.amazonaws.com"]
+      identifiers = ["vpc-flow-logs.amazonaws.com", "logs.amazonaws.com"]
     }
 
     actions = [

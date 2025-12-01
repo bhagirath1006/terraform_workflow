@@ -152,6 +152,7 @@ resource "aws_eip" "app" {
 
   lifecycle {
     create_before_destroy = true
+    prevent_destroy       = true
   }
 
   depends_on = [aws_instance.app]
