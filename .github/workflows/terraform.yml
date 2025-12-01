@@ -72,14 +72,19 @@ jobs:
           terraform apply -auto-approve tfplan
 
       # Get Outputs
-      - name: Get Deployment Outputs
-        id: deploy
+      - name: Get instance ID
+        shell: bash
         working-directory: terraform
         run: |
-          INSTANCE_ID=$(terraform output instance_id 2>/dev/null | tr -d '"' || echo "pending")
-          EIP=$(terraform output elastic_ip 2>/dev/null | tr -d '"' || echo "pending")
-          echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
-          echo "elastic_ip=$EIP" >> $GITHUB_OUTPUT
+          INSTANCE_ID=$(terraform output -raw instance_id 2>/dev/null || echo "pending")
+          echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
+
+      - name: Get elastic IP
+        shell: bash
+        working-directory: terraform
+        run: |
+          EIP=$(terraform output -raw elastic_ip 2>/dev/null || echo "pending")
+          echo "EIP=$EIP" >> $GITHUB_ENV
 
       # Deployment Summary
       - name: Deployment Summary
@@ -87,6 +92,6 @@ jobs:
         run: |
           echo "## ✅ Infrastructure Deployed Successfully" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Instance ID**: ${{ steps.deploy.outputs.instance_id }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Elastic IP**: ${{ steps.deploy.outputs.elastic_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Instance ID**: ${{ env.INSTANCE_ID }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Elastic IP**: ${{ env.EIP }}" >> $GITHUB_STEP_SUMMARY
           echo "**Region**: ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
