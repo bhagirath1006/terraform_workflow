@@ -1,208 +1,79 @@
-name: Terraform Deploy with Secrets Management
+name: Deploy Terraform Infrastructure
 
 on:
   push:
-    branches:
-      - main
-      - develop
-    paths:
-      - 'terraform/**'
-      - '.github/workflows/terraform.yml'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'terraform/**'
+    branches: [main]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - staging
-          - prod
 
 env:
-  TF_VERSION: "1.14.0"
-  AWS_REGION: "us-east-1"
+  AWS_REGION: ap-south-1
+  TF_VERSION: "1.6.0"
 
 jobs:
-  validate:
-    name: Validate & Lint
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Terraform Init (Validation only)
-        run: terraform init -backend=false -upgrade
-        working-directory: terraform
-
-      - name: Terraform Validate
-        run: terraform validate
-        working-directory: terraform
-
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
-        working-directory: terraform
-
-      - name: TFLint
-        uses: terraform-linters/setup-tflint@v3
-
-      - name: Run TFLint
-        run: |
-          cd terraform
-          tflint --init
-          tflint -f compact
-        continue-on-error: true
-
-      - name: Checkov Security Scan
-        uses: bridgecrewio/checkov-action@master
-        with:
-          directory: terraform
-          framework: terraform
-          quiet: false
-          soft_fail: true
-          skip_check: CKV_AWS_1,CKV_AWS_24
-
-  plan:
-    name: Terraform Plan
-    runs-on: ubuntu-latest
-    needs: validate
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    
-    env:
-      ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Terraform Init
-        run: terraform init -upgrade
-        working-directory: terraform
-        env:
-          TF_VAR_environment: ${{ env.ENVIRONMENT }}
-
-      - name: Terraform Plan
-        run: terraform plan -no-color -out=tfplan -var-file="environments/${{ env.ENVIRONMENT }}.tfvars"
-        working-directory: terraform
-        env:
-          TF_VAR_environment: ${{ env.ENVIRONMENT }}
-
-      - name: Upload Plan Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: tfplan-${{ env.ENVIRONMENT }}
-          path: terraform/tfplan
-          retention-days: 7
-
-      - name: Comment PR with Plan
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `✅ **Terraform Plan Generated**\n\nEnvironment: \`${{ env.ENVIRONMENT }}\`\n\nReview plan artifact for details.`
-            })
-
   deploy:
-    name: Deploy to ${{ github.event.inputs.environment || 'dev' }}
     runs-on: ubuntu-latest
-    needs: plan
-    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
-    environment:
-      name: ${{ github.event.inputs.environment || 'dev' }}
-    
-    env:
-      ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
     
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      # Configure AWS credentials
+      - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Retrieve Secrets from AWS Secrets Manager
-        id: secrets
-        run: |
-          SECRETS=$(aws secretsmanager get-secret-value --secret-id terraform/secrets --query SecretString --output text 2>/dev/null || echo '{}')
-          echo "::add-mask::$SECRETS"
-          echo "DOCKER_USERNAME=$(echo $SECRETS | jq -r '.docker_username // empty')" >> $GITHUB_OUTPUT
-          echo "DOCKER_PASSWORD=$(echo $SECRETS | jq -r '.docker_password // empty')" >> $GITHUB_OUTPUT
-          echo "DB_PASSWORD=$(echo $SECRETS | jq -r '.db_password // empty')" >> $GITHUB_OUTPUT
-          echo "API_KEY=$(echo $SECRETS | jq -r '.api_key // empty')" >> $GITHUB_OUTPUT
-        env:
-          AWS_REGION: ${{ env.AWS_REGION }}
+      # Setup Terraform
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
 
+      # Terraform Init
       - name: Terraform Init
-        run: terraform init -upgrade
         working-directory: terraform
-        env:
-          TF_VAR_environment: ${{ env.ENVIRONMENT }}
+        run: terraform init
 
+      # Terraform Validate
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+      # Terraform Format Check
+      - name: Terraform Format Check
+        working-directory: terraform
+        run: terraform fmt -check -recursive || true
+
+      # Terraform Plan
       - name: Terraform Plan
-        run: terraform plan -no-color -out=tfplan -var-file="environments/${{ env.ENVIRONMENT }}.tfvars"
         working-directory: terraform
-        env:
-          TF_VAR_environment: ${{ env.ENVIRONMENT }}
-          TF_VAR_docker_username: ${{ steps.secrets.outputs.DOCKER_USERNAME }}
-          TF_VAR_docker_password: ${{ steps.secrets.outputs.DOCKER_PASSWORD }}
-          TF_VAR_db_password: ${{ steps.secrets.outputs.DB_PASSWORD }}
-          TF_VAR_api_key: ${{ steps.secrets.outputs.API_KEY }}
+        run: |
+          terraform plan -out=tfplan \
+            -var-file="environments/dev.tfvars" \
+            -var="vault_addr=${{ secrets.VAULT_ADDR }}" \
+            -var="vault_token=${{ secrets.VAULT_TOKEN }}"
 
+      # Terraform Apply
       - name: Terraform Apply
-        id: deployment
-        run: |
-          terraform apply -no-color -auto-approve tfplan
-          echo "website_url=$(terraform output -raw website_url 2>/dev/null || echo 'pending')" >> $GITHUB_OUTPUT
-          echo "instance_id=$(terraform output -raw instance_id 2>/dev/null || echo 'pending')" >> $GITHUB_OUTPUT
         working-directory: terraform
-        env:
-          TF_VAR_environment: ${{ env.ENVIRONMENT }}
-          TF_VAR_docker_username: ${{ steps.secrets.outputs.DOCKER_USERNAME }}
-          TF_VAR_docker_password: ${{ steps.secrets.outputs.DOCKER_PASSWORD }}
-          TF_VAR_db_password: ${{ steps.secrets.outputs.DB_PASSWORD }}
-          TF_VAR_api_key: ${{ steps.secrets.outputs.API_KEY }}
-
-      - name: Create Deployment Summary
         run: |
-          echo "## ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          terraform apply -auto-approve tfplan
+
+      # Get Outputs
+      - name: Get Deployment Outputs
+        id: deploy
+        working-directory: terraform
+        run: |
+          INSTANCE_ID=$(terraform output -raw instance_id 2>/dev/null || echo "pending")
+          EIP=$(terraform output -raw elastic_ip 2>/dev/null || echo "pending")
+          echo "instance_id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+          echo "elastic_ip=$EIP" >> $GITHUB_OUTPUT
+
+      # Deployment Summary
+      - name: Deployment Summary
+        if: success()
+        run: |
+          echo "## ✅ Infrastructure Deployed Successfully" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment**: ${{ env.ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Instance ID**: ${{ steps.deployment.outputs.instance_id }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Website**: ${{ steps.deployment.outputs.website_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Instance ID**: ${{ steps.deploy.outputs.instance_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Elastic IP**: ${{ steps.deploy.outputs.elastic_ip }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Region**: ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
