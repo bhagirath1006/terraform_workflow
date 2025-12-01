@@ -22,7 +22,7 @@ resource "aws_vpc" "main" {
   }
 
   lifecycle {
-    prevent_destroy = true
+    ignore_changes = [tags]
   }
 }
 

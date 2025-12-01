@@ -146,9 +146,9 @@ resource "aws_instance" "app" {
 
 # Create key pair from public key if provided
 resource "aws_key_pair" "deployer" {
-  count           = var.ssh_public_key != "" ? 1 : 0
-  key_name        = "${var.project_name}-deployer"
-  public_key      = var.ssh_public_key
+  count      = var.ssh_public_key != "" ? 1 : 0
+  key_name   = "${var.project_name}-deployer"
+  public_key = var.ssh_public_key
 
   tags = {
     Name        = "${var.project_name}-deployer-key"
@@ -166,7 +166,6 @@ resource "aws_eip" "app" {
 
   lifecycle {
     create_before_destroy = true
-    prevent_destroy       = true
   }
 
   depends_on = [aws_instance.app]
