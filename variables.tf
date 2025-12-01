@@ -40,20 +40,20 @@ variable "availability_zone" {
 variable "allowed_ssh_cidrs" {
   description = "CIDR blocks allowed for SSH access"
   type        = list(string)
-  default     = ["0.0.0.0/0"]  # Change this to your IP for security
+  default     = ["0.0.0.0/0"] # Change this to your IP for security
 }
 
 # EC2 Configuration
 variable "ami_id" {
   description = "AMI ID (Ubuntu 22.04 LTS)"
   type        = string
-  default     = "ami-0c55b159cbfafe1f0"  # Replace with your region's Ubuntu AMI
+  default     = "ami-0c55b159cbfafe1f0" # Replace with your region's Ubuntu AMI
 }
 
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t2.micro"  # Free tier eligible
+  default     = "t2.micro" # Free tier eligible
 }
 
 variable "root_volume_size" {
@@ -82,9 +82,9 @@ variable "create_new_eip" {
   default     = true
 }
 
-# EC2 User Data - Docker Installation Only (Containers managed by Terraform)
+# EC2 User Data - Docker Installation and Container Deployment
 variable "user_data_script" {
-  description = "User data script for EC2 initialization (Docker installation only)"
+  description = "User data script for EC2 initialization (Docker installation and container deployment)"
   type        = string
   default     = <<-EOF
               #!/bin/bash
@@ -97,7 +97,7 @@ variable "user_data_script" {
               # Install Docker
               apt-get install -y docker.io curl wget
 
-              # Install Docker Compose (optional)
+              # Install Docker Compose
               curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
               chmod +x /usr/local/bin/docker-compose
 
@@ -111,9 +111,17 @@ variable "user_data_script" {
               # Create Docker log directory
               mkdir -p /var/log/docker-app
               
+              # Pull and run Docker container (can be customized via variables)
+              docker pull nginx:latest
+              docker run -d \
+                --name website-app \
+                --restart unless-stopped \
+                -p 80:80 \
+                -v /var/log/docker-app:/var/log/app \
+                nginx:latest
+              
               # Log initialization complete
-              echo "Docker installation completed at $(date)" > /var/log/docker-init.log
-              echo "Containers will be managed by Terraform" >> /var/log/docker-init.log
+              echo "Docker installation and container deployment completed at $(date)" > /var/log/docker-init.log
               EOF
 }
 
@@ -124,73 +132,150 @@ variable "enable_vault" {
 }
 
 variable "vault_address" {
-  type    = string
-  default = "http://localhost:8200"
+  description = "Vault server address"
+  type        = string
+  default     = "http://localhost:8200"
 }
 
 variable "vault_skip_tls_verify" {
-  type    = bool
-  default = true
-}
-
-variable "vault_token" {
-  type      = string
-  default   = ""
-  sensitive = true
-}
-
-variable "vault_auth_method" {
-  type    = string
-  default = "token"
-}
-
-variable "vault_secrets" {
-  type      = map(any)
-  default   = {}
-  sensitive = true
-}
-
-# Docker Provider Configuration
-variable "docker_host" {
-  description = "Docker daemon host"
-  type        = string
-  default     = "unix:///var/run/docker.sock"
-}
-
-variable "enable_docker_provider" {
-  description = "Enable Docker provider for container management"
+  description = "Skip TLS verification for Vault"
   type        = bool
   default     = true
 }
 
-# Docker Container Configuration
-variable "docker_image" {
-  description = "Docker image to deploy"
+variable "vault_namespace" {
+  description = "Vault namespace"
   type        = string
-  default     = "nginx:latest"
+  default     = ""
 }
 
-variable "docker_container_name" {
-  description = "Docker container name"
+variable "vault_auth_method" {
+  description = "Vault authentication method"
   type        = string
-  default     = "website-app"
+  default     = "token"
 }
 
-variable "docker_container_port" {
-  description = "Container internal port"
+variable "auth_method_path" {
+  description = "Vault authentication method path"
+  type        = string
+  default     = "auth/token"
+}
+
+variable "vault_auth_method_path" {
+  description = "Vault authentication method path"
+  type        = string
+  default     = "auth/token"
+}
+
+variable "vault_auth_parameters" {
+  description = "Vault authentication parameters"
+  type        = map(string)
+  default     = {}
+  sensitive   = true
+}
+
+variable "vault_token" {
+  description = "Vault authentication token"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "vault_kv_path" {
+  description = "Vault KV secrets path"
+  type        = string
+  default     = "secret/data/app"
+}
+
+variable "vault_secrets" {
+  description = "Vault secrets configuration"
+  type        = map(any)
+  default     = {}
+}
+
+variable "enable_vault_database_secrets" {
+  description = "Enable database secrets in Vault"
+  type        = bool
+  default     = false
+}
+
+variable "vault_db_username" {
+  description = "Database username for Vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "vault_db_password" {
+  description = "Database password for Vault"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "vault_db_host" {
+  description = "Database host for Vault"
+  type        = string
+  default     = ""
+}
+
+variable "vault_db_port" {
+  description = "Database port for Vault"
   type        = number
-  default     = 80
+  default     = 5432
 }
 
-variable "docker_host_port" {
-  description = "Host port mapping"
-  type        = number
-  default     = 80
-}
-
-variable "docker_restart_policy" {
-  description = "Docker restart policy"
+variable "vault_db_name" {
+  description = "Database name for Vault"
   type        = string
-  default     = "unless-stopped"
+  default     = ""
 }
 
+variable "enable_vault_app_config" {
+  description = "Enable application configuration in Vault"
+  type        = bool
+  default     = false
+}
+
+variable "vault_api_key" {
+  description = "API key for Vault app config"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "vault_debug_mode" {
+  description = "Enable debug mode in Vault app config"
+  type        = bool
+  default     = false
+}
+
+variable "enable_vault_approle" {
+  description = "Enable AppRole authentication in Vault"
+  type        = bool
+  default     = false
+}
+
+variable "vault_token_ttl" {
+  description = "Token TTL for Vault AppRole"
+  type        = string
+  default     = "1h"
+}
+
+variable "vault_token_max_ttl" {
+  description = "Token max TTL for Vault AppRole"
+  type        = string
+  default     = "24h"
+}
+
+variable "vault_secret_id_ttl" {
+  description = "Secret ID TTL for Vault AppRole"
+  type        = string
+  default     = "30m"
+}
+
+variable "vault_cidr_list" {
+  description = "CIDR list for Vault AppRole"
+  type        = list(string)
+  default     = []
+}

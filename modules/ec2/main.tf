@@ -1,8 +1,14 @@
-# ============================================================================
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 # IAM Role for EC2 - Docker and CloudWatch Permissions
-# ============================================================================
 # EC2 service role with permissions for CloudWatch logging
-# Replaces SSM Session Manager with SSH key-based access
 
 resource "aws_iam_role" "ec2_role" {
   name = "${var.project_name}-ec2-role"
@@ -25,9 +31,8 @@ resource "aws_iam_role" "ec2_role" {
   }
 }
 
-# ============================================================================
+
 # CloudWatch Logs Policy Attachment
-# ============================================================================
 # Allows EC2 instance to send logs to CloudWatch
 
 resource "aws_iam_role_policy_attachment" "cloudwatch_logs" {
@@ -35,9 +40,7 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_logs" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsAgentServerPolicy"
 }
 
-# ============================================================================
 # IAM Instance Profile
-# ============================================================================
 # Attaches IAM role to EC2 instance for policy permissions
 
 resource "aws_iam_instance_profile" "ec2_profile" {
@@ -47,14 +50,13 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 
 # ============================================================================
 # EC2 Key Pair - SSH Access
-# ============================================================================
 # Creates SSH key pair from provided public key file
 # If ssh_public_key_path is empty, uses existing key by name
 
 resource "aws_key_pair" "deployer" {
-  count              = var.ssh_public_key_path != "" ? 1 : 0
-  key_name           = var.ssh_key_name
-  public_key         = file(var.ssh_public_key_path)
+  count      = var.ssh_public_key_path != "" ? 1 : 0
+  key_name   = var.ssh_key_name
+  public_key = file(var.ssh_public_key_path)
   tags = {
     Name = "${var.project_name}-key"
   }
@@ -62,9 +64,7 @@ resource "aws_key_pair" "deployer" {
 
 # ============================================================================
 # EC2 Instance - Web Server
-# ============================================================================
-# Main compute resource for running Docker containers
-# SSH access via key pair (no SSM required)
+# SSH access via key pair
 # User data installs Docker on instance startup
 
 resource "aws_instance" "web" {

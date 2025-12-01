@@ -5,10 +5,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    docker = {
-      source  = "kreuzwerker/docker"
-      version = "~> 3.0"
-    }
     vault = {
       source  = "hashicorp/vault"
       version = "~> 4.0"
@@ -18,8 +14,6 @@ terraform {
 
 # ============================================================================
 # AWS Provider Configuration
-# ============================================================================
-# Configures AWS region and applies default tags to all resources
 
 provider "aws" {
   region = var.aws_region
@@ -33,16 +27,11 @@ provider "aws" {
   }
 }
 
-# ============================================================================
-# Docker Provider Configuration
-# ============================================================================
-# Connects to Docker daemon on EC2 instance for container management
+# Vault Provider Configuration
 
-provider "docker" {
-  host = var.docker_host
+provider "vault" {
+  address         = var.vault_address
+  skip_tls_verify = var.vault_skip_tls_verify
+  token           = var.vault_token != "" ? var.vault_token : null
 }
 
-# ============================================================================
-# Vault Provider Configuration
-# ============================================================================
-# Configured in vault module (optional, only enabled when var.enable_vault = true)

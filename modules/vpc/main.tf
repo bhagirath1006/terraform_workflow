@@ -1,12 +1,17 @@
-# ============================================================================
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 # VPC Module - Virtual Private Cloud Configuration
-# ============================================================================
 # Creates VPC, subnets, routing, and security groups for web traffic
 
 # ============================================================================
 # VPC Resource
-# ============================================================================
-# Main Virtual Private Cloud with DNS enabled
 
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
@@ -20,7 +25,6 @@ resource "aws_vpc" "main" {
 
 # ============================================================================
 # Internet Gateway
-# ============================================================================
 # Enables communication between VPC and the internet
 
 resource "aws_internet_gateway" "main" {
@@ -33,7 +37,6 @@ resource "aws_internet_gateway" "main" {
 
 # ============================================================================
 # Public Subnet
-# ============================================================================
 # Subnet where EC2 instance will be launched with automatic public IP
 
 resource "aws_subnet" "public" {
@@ -49,15 +52,14 @@ resource "aws_subnet" "public" {
 
 # ============================================================================
 # Route Table - Public Subnet
-# ============================================================================
 # Routes all traffic to internet gateway (routes to 0.0.0.0/0 go to IGW)
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block      = "0.0.0.0/0"
-    gateway_id      = aws_internet_gateway.main.id
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
   }
 
   tags = {
@@ -67,7 +69,6 @@ resource "aws_route_table" "public" {
 
 # ============================================================================
 # Route Table Association
-# ============================================================================
 # Associates public subnet with public route table
 
 resource "aws_route_table_association" "public" {
@@ -77,7 +78,6 @@ resource "aws_route_table_association" "public" {
 
 # ============================================================================
 # Security Group - Web Traffic
-# ============================================================================
 # Firewall rules: allows HTTP (80), HTTPS (443), SSH (22), all outbound
 
 resource "aws_security_group" "web" {
@@ -87,8 +87,6 @@ resource "aws_security_group" "web" {
 
   # ============================================================================
   # Ingress Rules - Inbound Traffic
-  # ============================================================================
-  
   # Allow HTTP traffic on port 80
   ingress {
     from_port   = 80
@@ -119,8 +117,8 @@ resource "aws_security_group" "web" {
   # ============================================================================
   # Egress Rules - Outbound Traffic
   # ============================================================================
-  
   # Allow all outbound traffic (required for Docker pulls, updates, etc.)
+
   egress {
     from_port   = 0
     to_port     = 0

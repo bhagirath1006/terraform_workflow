@@ -29,19 +29,19 @@ variable "user_data_script" {
   type        = string
 }
 
-variable \"root_volume_size\" {
-  description = \"Root volume size in GB\"
+variable "root_volume_size" {
+  description = "Root volume size in GB"
   type        = number
   default     = 8
 }
 
-variable \"ssh_key_name\" {
-  description = \"AWS EC2 Key Pair name for SSH access\"
+variable "ssh_key_name" {
+  description = "AWS EC2 Key Pair name for SSH access"
   type        = string
 }
 
-variable \"ssh_public_key_path\" {
-  description = \"Path to SSH public key file (optional, used if key_name doesn't exist)\"
+variable "ssh_public_key_path" {
+  description = "Path to SSH public key file (optional, used if key_name doesn't exist)"
   type        = string
-  default     = \"\"
+  default     = ""
 }

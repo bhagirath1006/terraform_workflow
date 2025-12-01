@@ -6,6 +6,13 @@ variable "vault_address" {
   default     = "http://vault.example.com:8200"
 }
 
+variable "vault_token" {
+  description = "Vault authentication token"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "skip_tls_verify" {
   description = "Skip TLS verification for Vault"
   type        = bool
@@ -46,7 +53,6 @@ variable "secrets" {
   description = "Map of secrets to store in Vault"
   type        = map(any)
   default     = {}
-  sensitive   = true
 }
 
 variable "enable_database_secrets" {
@@ -113,25 +119,25 @@ variable "enable_approle" {
 }
 
 variable "token_ttl" {
-  description = "Token TTL in seconds"
+  description = "Token TTL"
   type        = string
-  default     = "3600"
+  default     = "1h"
 }
 
 variable "token_max_ttl" {
-  description = "Token max TTL in seconds"
+  description = "Token max TTL"
   type        = string
-  default     = "86400"
+  default     = "24h"
 }
 
 variable "secret_id_ttl" {
-  description = "SecretID TTL in seconds"
+  description = "SecretID TTL"
   type        = string
-  default     = "3600"
+  default     = "30m"
 }
 
 variable "cidr_list" {
   description = "CIDR blocks allowed to use the AppRole"
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = []
 }

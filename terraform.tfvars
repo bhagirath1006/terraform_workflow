@@ -1,5 +1,5 @@
 # AWS Configuration
-aws_region     = "us-east-1"
+aws_region        = "us-east-1"
 availability_zone = "us-east-1a"
 
 # Project Configuration
@@ -11,10 +11,10 @@ vpc_cidr           = "10.0.0.0/16"
 public_subnet_cidr = "10.0.1.0/24"
 
 # EC2 Configuration
-ami_id        = "ami-0c55b159cbfafe1f0"
-instance_type = "t2.micro"
+ami_id            = "ami-0c55b159cbfafe1f0"
+instance_type     = "t2.micro"
 allowed_ssh_cidrs = ["0.0.0.0/0"]
-root_volume_size = 20
+root_volume_size  = 20
 
 # SSH Key Configuration
 # Option 1: Use existing EC2 key pair (create in AWS Console first)
@@ -26,14 +26,6 @@ ssh_public_key_path = "~/.ssh/docker-web-app-key.pub"
 
 # EIP Configuration
 create_new_eip = true
-
-# Docker Configuration (Managed via Terraform)
-enable_docker_provider = true
-docker_image           = "nginx:latest"
-docker_container_name  = "website-app"
-docker_container_port  = 80
-docker_host_port       = 80
-docker_restart_policy  = "unless-stopped"
 
 # Vault Configuration (Optional)
 enable_vault          = true
@@ -47,10 +39,10 @@ vault_token           = "root"
 vault_secrets = {
   # AWS Credentials - Add your actual values in GitHub Secrets, NOT here!
   "aws-credentials" = {
-    access_key = "YOUR_AWS_ACCESS_KEY"      # Set in GitHub Secrets
-    secret_key = "YOUR_AWS_SECRET_KEY"      # Set in GitHub Secrets
+    access_key = "YOUR_AWS_ACCESS_KEY" # Set in GitHub Secrets
+    secret_key = "YOUR_AWS_SECRET_KEY" # Set in GitHub Secrets
   }
-  
+
   # Docker Credentials (optional, for private registries)
   "docker-credentials" = {
     username = "admin"

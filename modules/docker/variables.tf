@@ -27,9 +27,15 @@ variable "host_port" {
   default     = 80
 }
 
-variable "restart_policy" {
-  description = "Container restart policy"
+variable "restart_policy_name" {
   type        = string
-  default     = "unless-stopped"
+  description = "Docker restart policy name"
+  default     = "always"
+}
+
+variable "restart_policy_retry" {
+  type        = number
+  description = "Retry count for restart policy"
+  default     = 0
 }
 

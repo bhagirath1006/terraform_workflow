@@ -13,9 +13,3 @@ variable "create_new_eip" {
   type        = bool
   default     = true
 }
-
-variable "depends_on" {
-  description = "Dependencies for the module"
-  type        = list(any)
-  default     = []
-}

@@ -1,12 +1,6 @@
 # ============================================================================
 # Terraform Outputs
-# ============================================================================
-# Key information from deployed infrastructure
 
-# ============================================================================
-# Website Access URL
-# ============================================================================
-# Access deployed website via this URL (HTTP on configured port)
 
 output "website_url" {
   description = "Website URL using Elastic IP"
@@ -15,8 +9,6 @@ output "website_url" {
 
 # ============================================================================
 # Elastic IP Address
-# ============================================================================
-# Fixed public IP address associated with EC2 instance
 
 output "elastic_ip" {
   description = "Elastic IP address for SSH access"
@@ -24,36 +16,33 @@ output "elastic_ip" {
 }
 
 # ============================================================================
-# Docker Container ID
-# ============================================================================
-# Container ID of deployed application
+# EC2 Instance Details
 
-output "docker_container_id" {
-  description = "Docker container ID (null if Docker disabled)"
-  value       = try(module.docker[0].container_id, null)
+output "instance_id" {
+  description = "EC2 Instance ID"
+  value       = module.ec2.instance_id
 }
 
 # ============================================================================
 # Deployment Summary
-# ============================================================================
-# Quick reference of all deployment details
+
 
 output "deployment_summary" {
   description = "Complete deployment information"
   value = {
-    website_url  = "http://${module.eip.eip_address}"
-    elastic_ip   = module.eip.eip_address
-    instance_id  = module.ec2.instance_id
-    docker_image = var.docker_image
+    website_url = "http://${module.eip.eip_address}"
+    elastic_ip  = module.eip.eip_address
+    instance_id = module.ec2.instance_id
+    environment = var.environment
   }
 }
 
 # ============================================================================
 # Vault Status
-# ============================================================================
 # Shows whether Vault integration is enabled
 
 output "vault_status" {
   description = "Vault integration status"
   value       = var.enable_vault ? "Enabled at ${var.vault_address}" : "Disabled"
 }
+
