@@ -22,7 +22,7 @@ resource "docker_container" "app" {
     external = var.host_port
   }
 
-  restart_policy_name             = var.restart_policy_name
+  restart_policy_name                = var.restart_policy_name
   restart_policy_maximum_retry_count = var.restart_policy_retry
 
   depends_on = [docker_image.app]
