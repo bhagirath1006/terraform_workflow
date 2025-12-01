@@ -126,13 +126,7 @@ resource "aws_instance" "app" {
   }
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    docker_registry_server = var.docker_registry_server
-    docker_username        = var.docker_username
-    docker_password        = var.docker_password
-    docker_image_uri       = var.docker_image_uri
-    container_port         = var.container_port
-    host_port              = var.host_port
-    project_name           = var.project_name
+    project_name = var.project_name
   }))
 
   tags = {

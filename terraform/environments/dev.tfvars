@@ -1,23 +1,9 @@
-aws_region       = "us-east-1"
+aws_region       = "ap-south-1"
 project_name     = "terraform-app"
 environment      = "dev"
 vpc_cidr         = "10.0.0.0/16"
 instance_type    = "t3.micro"
-ssh_allowed_cidr = ["0.0.0.0/0"]
-
-# Docker configuration (update with your values)
-docker_registry_server = "docker.io"
-docker_username        = "your-docker-username"
-docker_password        = "your-docker-password"
-docker_image_uri       = "your-docker-image:latest"
-container_port         = 8080
-host_port              = 80
-
-# Database configuration
-db_host     = "localhost"
-db_username = "devadmin"
-db_password = "dev-password-change-me"
-api_key     = "dev-api-key-change-me"
+ssh_allowed_cidr = ["10.0.0.0/8"]
 
 # Vault configuration (update with your Vault details)
 vault_addr            = "http://localhost:8200"
@@ -25,5 +11,5 @@ vault_token           = "your-vault-token"
 vault_skip_tls_verify = true
 
 # Monitoring
-enable_monitoring  = false
-log_retention_days = 3
+enable_monitoring  = true
+log_retention_days = 7

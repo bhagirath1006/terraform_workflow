@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
-  default     = "us-east-1"
+  default     = "ap-south-1"
 }
 
 variable "project_name" {
@@ -39,75 +39,16 @@ variable "private_subnet_cidrs" {
 }
 
 variable "ssh_allowed_cidr" {
-  description = "CIDR blocks allowed for SSH access"
+  description = "CIDR blocks allowed for SSH access (restrict to your IP)"
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = ["10.0.0.0/8"]
 }
 
 # EC2 Variables
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t3.medium"
-}
-
-variable "docker_registry_server" {
-  description = "Docker registry server"
-  type        = string
-  default     = "docker.io"
-  sensitive   = true
-}
-
-variable "docker_username" {
-  description = "Docker registry username"
-  type        = string
-  sensitive   = true
-}
-
-variable "docker_password" {
-  description = "Docker registry password"
-  type        = string
-  sensitive   = true
-}
-
-variable "docker_image_uri" {
-  description = "Docker image URI to deploy"
-  type        = string
-  sensitive   = true
-}
-
-variable "container_port" {
-  description = "Container application port"
-  type        = number
-  default     = 8080
-}
-
-variable "host_port" {
-  description = "Host port to map to container"
-  type        = number
-  default     = 80
-}
-
-# Secrets Variables
-variable "db_username" {
-  description = "Database username"
-  type        = string
-  sensitive   = true
-  default     = "admin"
-}
-
-variable "db_password" {
-  description = "Database password"
-  type        = string
-  sensitive   = true
-  default     = "change-me-in-production"
-}
-
-variable "api_key" {
-  description = "External API key"
-  type        = string
-  sensitive   = true
-  default     = "change-me-in-production"
+  default     = "t3.micro"
 }
 
 variable "enable_monitoring" {
@@ -124,7 +65,7 @@ variable "log_retention_days" {
 
 # Vault Configuration
 variable "vault_addr" {
-  description = "Vault server address (e.g., https://vault.example.com:8200)"
+  description = "Vault server address"
   type        = string
   sensitive   = true
 }
@@ -136,13 +77,7 @@ variable "vault_token" {
 }
 
 variable "vault_skip_tls_verify" {
-  description = "Skip TLS verification for Vault (not recommended for production)"
+  description = "Skip TLS verification for Vault"
   type        = bool
   default     = false
-}
-
-variable "db_host" {
-  description = "Database host address"
-  type        = string
-  default     = "localhost"
 }

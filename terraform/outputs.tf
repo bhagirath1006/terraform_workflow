@@ -43,20 +43,13 @@ output "log_group_name" {
   value       = module.ec2.log_group_name
 }
 
-output "app_secret_arn" {
+output "elastic_ip" {
+  description = "Elastic IP address"
+  value       = module.ec2.public_ip
+}
+
+output "vault_secrets_path" {
   description = "Path to application secrets in Vault"
   value       = module.secrets.app_secrets_path
-  sensitive   = true
-}
-
-output "database_secret_arn" {
-  description = "Path to database secrets in Vault"
-  value       = module.secrets.database_secrets_path
-  sensitive   = true
-}
-
-output "api_secret_arn" {
-  description = "Vault policy name for EC2 instances"
-  value       = module.secrets.ec2_policy_name
-  sensitive   = true
+  sensitive   = false
 }
