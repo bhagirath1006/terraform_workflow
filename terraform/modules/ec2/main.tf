@@ -7,6 +7,10 @@ terraform {
   }
 }
 
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"]
@@ -51,26 +55,42 @@ resource "aws_iam_role_policy" "ec2_policy" {
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret"
         ]
+        Resource = "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken"
+        ]
         Resource = "*"
       },
       {
         Effect = "Allow"
         Action = [
-          "ecr:GetAuthorizationToken",
           "ecr:BatchGetImage",
           "ecr:GetDownloadUrlForLayer"
         ]
-        Resource = "*"
+        Resource = "arn:aws:ecr:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:repository/*"
       },
       {
         Effect = "Allow"
         Action = [
-          "cloudwatch:PutMetricData",
-          "logs:CreateLogGroup",
+          "cloudwatch:PutMetricData"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "cloudwatch:namespace" = "AWS/EC2"
+          }
+        }
+      },
+      {
+        Effect = "Allow"
+        Action = [
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "*"
+        Resource = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/ec2/${var.project_name}:*"
       }
     ]
   })
@@ -88,7 +108,22 @@ resource "aws_instance" "app" {
   vpc_security_group_ids = [var.security_group_id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 
-  associate_public_ip_address = true
+  associate_public_ip_address = false
+  ebs_optimized               = true
+  monitoring                  = true
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+    instance_metadata_tags      = "enabled"
+  }
+
+  root_block_device {
+    encrypted   = true
+    volume_type = "gp3"
+    volume_size = 20
+  }
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
     docker_registry_server = var.docker_registry_server
@@ -128,9 +163,26 @@ resource "aws_eip_association" "eip_assoc" {
   allocation_id = aws_eip.app.id
 }
 
+resource "aws_kms_key" "logs" {
+  description             = "KMS key for encrypting CloudWatch logs"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  tags = {
+    Name        = "${var.project_name}-logs-key"
+    Environment = var.environment
+  }
+}
+
+resource "aws_kms_alias" "logs" {
+  name          = "alias/${var.project_name}-logs"
+  target_key_id = aws_kms_key.logs.key_id
+}
+
 resource "aws_cloudwatch_log_group" "app" {
   name              = "/aws/ec2/${var.project_name}"
-  retention_in_days = var.log_retention_days
+  retention_in_days = max(365, var.log_retention_days)
+  kms_key_id        = aws_kms_key.logs.arn
 
   tags = {
     Name        = "${var.project_name}-logs"
