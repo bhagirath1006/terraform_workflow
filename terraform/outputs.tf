@@ -20,32 +20,32 @@ output "security_group_id" {
 
 output "instance_id" {
   description = "EC2 instance ID"
-  value       = module.ec2.instance_id
+  value       = try(module.ec2.instance_id, "pending")
 }
 
 output "instance_private_ip" {
   description = "EC2 instance private IP"
-  value       = module.ec2.private_ip
+  value       = try(module.ec2.private_ip, "pending")
 }
 
 output "instance_public_ip" {
   description = "EC2 instance Elastic IP"
-  value       = module.ec2.public_ip
+  value       = try(module.ec2.public_ip, "pending")
 }
 
 output "website_url" {
   description = "Website URL"
-  value       = module.ec2.website_url
+  value       = try(module.ec2.website_url, "pending")
 }
 
 output "log_group_name" {
   description = "CloudWatch log group name"
-  value       = module.ec2.log_group_name
+  value       = try(module.ec2.log_group_name, "pending")
 }
 
 output "elastic_ip" {
   description = "Elastic IP address"
-  value       = module.ec2.public_ip
+  value       = try(module.ec2.public_ip, "pending")
 }
 
 output "vault_secrets_path" {
