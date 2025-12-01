@@ -1,0 +1,223 @@
+name: Terraform Deploy
+
+# ============================================================================
+# Trigger Configuration
+# ============================================================================
+# This workflow runs when:
+# - Code is pushed to main branch
+# - Pull request is created/updated
+# - Manual trigger (workflow_dispatch)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+      - '*.tf'
+      - '*.tfvars'
+      - '.github/workflows/terraform-deploy.yml'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# ============================================================================
+# Environment Variables
+# ============================================================================
+env:
+  TERRAFORM_VERSION: 1.5.0
+  AWS_REGION: us-east-1
+
+# ============================================================================
+# Jobs
+# ============================================================================
+jobs:
+  # ============================================================================
+  # Terraform Plan Job
+  # ============================================================================
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout code from repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      # Configure AWS credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
+
+      # Validate Terraform configuration
+      - name: Terraform Validate
+        run: terraform validate
+
+      # Format check
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      # Plan deployment
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        env:
+          TF_VAR_vault_token: ${{ secrets.VAULT_TOKEN }}
+          TF_VAR_ssh_public_key_path: ${{ secrets.SSH_PUBLIC_KEY_PATH }}
+
+      # Upload plan as artifact (for apply job)
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfplan
+          path: tfplan
+          retention-days: 1
+
+      # Comment on PR with plan results
+      - name: Comment PR with Plan
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('tfplan', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Terraform Plan\n\n\`\`\`\n${plan}\n\`\`\``
+            });
+
+  # ============================================================================
+  # Terraform Apply Job (only on main branch push)
+  # ============================================================================
+  terraform-apply:
+    name: Terraform Apply
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      # Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      # Configure AWS credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Download plan artifact
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v3
+        with:
+          name: tfplan
+
+      # Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
+
+      # Apply deployment
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        env:
+          TF_VAR_vault_token: ${{ secrets.VAULT_TOKEN }}
+          TF_VAR_ssh_public_key_path: ${{ secrets.SSH_PUBLIC_KEY_PATH }}
+
+      # Get outputs
+      - name: Get Terraform Outputs
+        id: outputs
+        run: |
+          echo "website_url=$(terraform output -raw website_url)" >> $GITHUB_OUTPUT
+          echo "elastic_ip=$(terraform output -raw elastic_ip)" >> $GITHUB_OUTPUT
+          echo "instance_id=$(terraform output -raw deployment_summary)" >> $GITHUB_OUTPUT
+
+      # Create deployment summary
+      - name: Create Deployment Summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## 🚀 Deployment Successful
+          
+          ### Resources Created:
+          - **Website URL**: ${{ steps.outputs.outputs.website_url }}
+          - **Elastic IP**: ${{ steps.outputs.outputs.elastic_ip }}
+          
+          ### Next Steps:
+          1. Access your website at: ${{ steps.outputs.outputs.website_url }}
+          2. SSH into instance: \`ssh -i docker-web-app-key ubuntu@${{ steps.outputs.outputs.elastic_ip }}\`
+          3. Check Docker container: \`docker ps\`
+          EOF
+
+      # Send Slack notification (optional)
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "Terraform Deployment",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Status*: ${{ job.status }}\n*Commit*: ${{ github.sha }}\n*Author*: ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================================================
+  # Cleanup Job (for PR closures)
+  # ============================================================================
+  cleanup:
+    name: Cleanup PR Resources
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Destroy (Optional - uncomment to enable)
+        # run: terraform destroy -auto-approve
+        run: echo "PR closed - cleanup skipped. Uncomment terraform destroy to enable auto-cleanup"
