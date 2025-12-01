@@ -8,14 +8,13 @@ terraform {
     }
   }
 
-  # Uncomment below to use remote state (S3 backend)
-  # backend "s3" {
-  #   bucket         = "terraform-state-bucket"
-  #   key            = "prod/terraform.tfstate"
-  #   region         = "us-east-1"
-  #   encrypt        = true
-  #   dynamodb_table = "terraform-locks"
-  # }
+  backend "s3" {
+    bucket         = "terraform-app-state-bucket"
+    key            = "dev/terraform.tfstate"
+    region         = "ap-south-1"
+    encrypt        = true
+    dynamodb_table = "terraform-app-locks"
+  }
 }
 
 provider "aws" {

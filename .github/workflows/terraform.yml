@@ -28,6 +28,12 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
+      # Bootstrap state backend
+      - name: Bootstrap State Backend
+        run: |
+          chmod +x bootstrap.sh
+          ./bootstrap.sh
+
       # Terraform Init
       - name: Terraform Init
         working-directory: terraform
