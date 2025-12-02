@@ -77,14 +77,18 @@ jobs:
         working-directory: terraform
         run: |
           INSTANCE_ID=$(terraform output -raw instance_id 2>/dev/null || echo "pending")
-          echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
+          echo "INSTANCE_ID<<EOF" >> $GITHUB_ENV
+          echo "$INSTANCE_ID" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Get elastic IP
         shell: bash
         working-directory: terraform
         run: |
           EIP=$(terraform output -raw elastic_ip 2>/dev/null || echo "pending")
-          echo "EIP=$EIP" >> $GITHUB_ENV
+          echo "EIP<<EOF" >> $GITHUB_ENV
+          echo "$EIP" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       # Deployment Summary
       - name: Deployment Summary
